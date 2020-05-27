@@ -33,7 +33,7 @@ def createWallet():
     fee = WalletAdmin.functions.getCreateFee().call()
     print('当前创建钱包的费用为:',fee/ONE_ETHER,'ETH')
     name="NaturalDao"
-    owners = [my_address,'0x8Df5B73CD52AC4837e761277a3C769f7F50A0cd2','0xF5F8a3973618f0B7F78eCB3ddd149887430Bf2dF']
+    owners = [my_address,'0x8Df5B73CD52AC4837e761277a3C769f7F50A0cd2']
     required = len(owners)
     template_index = 0
     args = (name,owners,required,template_index)

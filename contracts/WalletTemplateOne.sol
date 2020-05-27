@@ -11,9 +11,11 @@ contract WalletTemplateOne is ERC1155MockReceiver,IWalletTemplate {
      */
     event Confirmation(address indexed sender, uint indexed transactionId);
     event Revocation(address indexed sender, uint indexed transactionId);
-    event Submission(uint indexed transactionId);
-    event Execution(uint indexed transactionId);
-    event ExecutionFailure(uint indexed transactionId);
+
+    event Submission(address indexed sender,uint indexed transactionId);
+    event Execution(address indexed sender,uint indexed transactionId);
+    event ExecutionFailure(address indexed sender,uint indexed transactionId);
+
     event Deposit(address indexed sender, uint value);
     event OwnerAddition(address indexed owner);
     event OwnerRemoval(address indexed owner);
@@ -45,17 +47,17 @@ contract WalletTemplateOne is ERC1155MockReceiver,IWalletTemplate {
      *  Modifiers
      */
     modifier onlyWallet() {
-        require(msg.sender == address(this));
+        require(msg.sender == address(this),"permission defined");
         _;
     }
 
     modifier ownerDoesNotExist(address owner) {
-        require(!isOwner[owner]);
+        require(!isOwner[owner],'owner has existed');
         _;
     }
 
     modifier ownerExists(address owner) {
-        require(isOwner[owner]);
+        require(isOwner[owner],'owner has not existed');
         _;
     }
 
@@ -201,8 +203,10 @@ contract WalletTemplateOne is ERC1155MockReceiver,IWalletTemplate {
         notConfirmed(transactionId, msg.sender)
     {
         confirmations[transactionId][msg.sender] = true;
-        emit Confirmation(msg.sender, transactionId);
-        executeTransaction(transactionId);
+        bool flag = executeTransaction(transactionId);
+        if(!flag) {
+            emit Confirmation(msg.sender, transactionId);
+        }
     }
 
     /// @dev Allows an owner to revoke a confirmation for a transaction.
@@ -224,16 +228,21 @@ contract WalletTemplateOne is ERC1155MockReceiver,IWalletTemplate {
         ownerExists(msg.sender)
         confirmed(transactionId, msg.sender)
         notExecuted(transactionId)
+        returns(bool)
     {
         if (isConfirmed(transactionId)) {
             Transaction storage txn = transactions[transactionId];
             txn.executed = true;
-            if (external_call(txn.destination, txn.value, txn.data.length, txn.data))
-                emit Execution(transactionId);
-            else {
-                emit ExecutionFailure(transactionId);
+            if (external_call(txn.destination, txn.value, txn.data.length, txn.data)){
+                emit Execution(msg.sender,transactionId);
+                return true;
+            } else {
+                emit ExecutionFailure(msg.sender,transactionId);
                 txn.executed = false;
+                return false;
             }
+        }else {
+            return false;
         }
     }
 
@@ -297,7 +306,7 @@ contract WalletTemplateOne is ERC1155MockReceiver,IWalletTemplate {
             executed: false
         });
         transactionCount += 1;
-        emit Submission(transactionId);
+        emit Submission(msg.sender,transactionId);
     }
 
     /*
@@ -373,18 +382,31 @@ contract WalletTemplateOne is ERC1155MockReceiver,IWalletTemplate {
         view
         returns (uint[] memory _transactionIds)
     {
-        uint[] memory transactionIdsTemp = new uint[](transactionCount);
+        require(from < to && to <= transactionCount," index out of bounds");
+        uint[] memory transactionIdsTemp = new uint[](to - from);
         uint count = 0;
         uint i;
-        for (i=0; i<transactionCount; i++)
-            if (   pending && !transactions[i].executed
-                || executed && transactions[i].executed)
-            {
+        for (i=from; i<to; i++){
+            if ( (pending && !transactions[i].executed) || (executed && transactions[i].executed)) {
                 transactionIdsTemp[count] = i;
                 count += 1;
             }
-        _transactionIds = new uint[](to - from);
+        }
+        _transactionIds = new uint[](count);
+        for(i=0;i<count;i++){
+            _transactionIds[i] = transactionIdsTemp[i];
+        }
+        /* _transactionIds = new uint[](to - from);
         for (i=from; i<to; i++)
-            _transactionIds[i - from] = transactionIdsTemp[i];
+            _transactionIds[i - from] = transactionIdsTemp[i]; */
+    }
+
+    //
+    function getAllOwners() external view returns(address[] memory) {
+        return owners;
+    }
+
+    function getOwnerCount() external view returns(uint) {
+        return owners.length;
     }
 }

@@ -60,5 +60,5 @@ def setup():
     setCreateFee()
 
 getInfo()
-setup()
+setWalletAdminAddress()
 getInfo()

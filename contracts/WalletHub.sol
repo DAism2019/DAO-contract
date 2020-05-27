@@ -27,6 +27,7 @@ contract WalletHub is Ownable,IWalletHubGet,IWalletHubSet {
         */
         isUpgrade = true;
         instance = IWalletHubGet(new_address);
+        emit upgradeSuc(new_address);
     }
 
 
@@ -68,8 +69,6 @@ contract WalletHub is Ownable,IWalletHubGet,IWalletHubSet {
         */
         emit setBeneficiarySuc(_beneficiary,new_beneficiary);
         _beneficiary = new_beneficiary;
-
-
     }
 
     function getWalletAdminAddress() external view returns(address) {
