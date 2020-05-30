@@ -10,7 +10,7 @@ contract WalletTemplateInfosInterface {
 }
 
 contract WalletInfosInterface {
-    function saveWalletInfo(address creator,address wallet,string calldata name,uint templateIndex) external;
+    function saveWalletInfo(address creator,address wallet,string calldata name,uint templateIndex) external returns(uint);
 }
 
 
@@ -20,7 +20,7 @@ contract WalletAdmin is CloneFactory {
     WalletInfosInterface public wallet_infos;               //instance of WalletInfos
     IWalletHubGet public wallet_hub;                        //instance of wallet_hub
 
-    event createWalletSuc(address indexed creator,address wallet,string name,uint templateIndex);
+    event createWalletSuc(address indexed creator,address wallet,string name,uint templateIndex,uint amount);
 
 
     constructor(address wallet_hub_address,address templateInfos_address,address wallet_infos_address) public {
@@ -54,8 +54,8 @@ contract WalletAdmin is CloneFactory {
         address wallet = createClone(_check_template(templateIndex));
         IWalletTemplate(wallet).initWallet(_owners,_required);
         //save wallet info
-        wallet_infos.saveWalletInfo(msg.sender,wallet,name,templateIndex);
-        emit createWalletSuc(msg.sender,wallet,name,templateIndex);
+        uint amount = wallet_infos.saveWalletInfo(msg.sender,wallet,name,templateIndex);
+        emit createWalletSuc(msg.sender,wallet,name,templateIndex,amount);
     }
 
     function _check_pay(uint eth_value) private {

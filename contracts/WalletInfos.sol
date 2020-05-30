@@ -10,6 +10,9 @@ contract WalletInfos {
         string name;
         uint templateIndex;
         uint createTime;
+        //todo
+        /* string descriptions; */
+        /* string website; */
     }
     uint public nonce;                                                  //record the amout of wallet
     mapping(uint => address) public walletAddressById ;                                   //enum all wallets   id => address
@@ -29,6 +32,18 @@ contract WalletInfos {
         wallet_hub = WalletHubInterface(wallet_hub_address);
     }
 
+    function getWalletInfoById(uint id) external view returns(address,address,string memory,uint,uint) {
+        /**
+            @dev return infos of a wallet
+            @param id The id of the wallet
+            @return Address of wallet ,creator、name、template_index、createTime of wallet
+        */
+        require(id > 0 && id <=nonce, "WalletInfos: id out of bounds");
+        address wallet = walletAddressById[id];
+        Infos memory info = _allWalletInfos[wallet];
+        return (wallet,info.creator,info.name,info.templateIndex,info.createTime);
+    }
+
     function getWalletInfo(address wallet) external view returns(address,string memory,uint,uint) {
         /**
             @dev return infos of a wallet
@@ -38,6 +53,18 @@ contract WalletInfos {
         Infos memory info = _allWalletInfos[wallet];
         return (info.creator,info.name,info.templateIndex,info.createTime);
     }
+
+    function getWalletInfoByName(string calldata name) external view returns(address,address,string memory,uint,uint) {
+        /**
+            @dev return infos of a wallet
+            @param name The name of the wallet
+            @return  Address of wallet creator、name、template_index、createTime of wallet
+        */
+        address wallet = _walletAddresses[name];
+        Infos memory info = _allWalletInfos[wallet];
+        return (wallet,info.creator,info.name,info.templateIndex,info.createTime);
+    }
+
 
     function hasRegister(string calldata name) external view returns(bool) {
         /**
@@ -55,14 +82,14 @@ contract WalletInfos {
         return userWallets[creator].length;
     }
 
-
-    function saveWalletInfo(address creator,address wallet,string calldata name,uint templateIndex) onlyWalletAdmin external {
+    function saveWalletInfo(address creator,address wallet,string calldata name,uint templateIndex) external onlyWalletAdmin returns(uint)  {
         /**
             @dev  Save infos of wallet that has been created
             @param creator The creator of wallet
             @param wallet The address of wallet
             @param name The name of wallet
             @param templateIndex The template_index of wallet
+            @return Amount of wallets
         */
         require(wallet != address(0),"WalletInfos: zero_address");
         require(_walletAddresses[name] == address(0),"WalletInfos: name has been registered");
@@ -71,6 +98,6 @@ contract WalletInfos {
         _allWalletInfos[wallet] = Infos(creator,name,templateIndex,block.timestamp);
         userWallets[creator].push(wallet);
         _walletAddresses[name] = wallet;
-
+        return nonce;
     }
 }
