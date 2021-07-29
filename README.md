@@ -2,7 +2,7 @@
 DAism Smart Contract
 
 #### Description
-This is a platform of DAO
+This is a platform for DAO2
 
 #### Software Architecture
 truffle project
