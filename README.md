@@ -1,8 +1,8 @@
 # DAism
-DAism Smart Contract
+DAism's Smart Contracts
 
 #### Description
-This is a platform for DAO2
+DAism is a governance layer for Ethererum's DAOs and their dApps.
 
 #### Software Architecture
 truffle project
